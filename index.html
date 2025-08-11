@@ -914,68 +914,96 @@
       });
     });
 
-    // Reservation system
-    const reserveBtns = document.querySelectorAll('.reserve-btn');
-    const reservationModal = document.getElementById('reservationModal');
-    const closeModal = document.querySelector('.close-modal');
-    const classNameInput = document.getElementById('className');
-    
-    reserveBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const classType = btn.getAttribute('data-class');
-        classNameInput.value = classType;
-        reservationModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-      });
+    // ===================== Reservation System =====================
+const reserveBtns = document.querySelectorAll('.reserve-btn');
+const reservationModal = document.getElementById('reservationModal');
+const closeModal = document.querySelector('.close-modal');
+const classNameInput = document.getElementById('className');
+
+// وقتی روی دکمه رزرو کلیک شد، مودال باز شود
+reserveBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const classType = btn.getAttribute('data-class');
+    classNameInput.value = classType;
+    reservationModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  });
+});
+
+// بستن مودال با دکمه ضربدر
+closeModal.addEventListener('click', () => {
+  reservationModal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+});
+
+// بستن مودال وقتی بیرون کلیک می‌شود
+window.addEventListener('click', (e) => {
+  if (e.target === reservationModal) {
+    reservationModal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+});
+
+// ===================== Handle Form Submission =====================
+const reservationForm = document.getElementById('reservationForm');
+
+reservationForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  // گرفتن داده‌های فرم
+  const formData = {
+    className: classNameInput.value,
+    fullName: document.getElementById('fullName').value,
+    phone: document.getElementById('phoneNumber').value,
+    email: document.getElementById('email').value,
+    message: document.getElementById('message').value
+  };
+
+  // ذخیره در LocalStorage
+  let reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+  reservations.push({
+    ...formData,
+    date: new Date().toLocaleString('fa-IR')
+  });
+  localStorage.setItem('reservations', JSON.stringify(reservations));
+
+  // === ارسال به تلگرام ===
+  const BOT_TOKEN = "توکن_ربات_اینجا";
+  const CHAT_IDS = ["آیدی_اول", "آیدی_دوم"]; // دو آیدی گیرنده
+
+  const text = `📢 *رزرو جدید*
+🏷 *کلاس:* ${formData.className}
+👤 *نام:* ${formData.fullName}
+📞 *تلفن:* ${formData.phone}
+📧 *ایمیل:* ${formData.email || "ندارد"}
+💬 *پیام:* ${formData.message || "ندارد"}
+🕒 *تاریخ:* ${new Date().toLocaleString('fa-IR')}`;
+
+  CHAT_IDS.forEach(chatId => {
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: "Markdown"
+      })
     });
-    
-    closeModal.addEventListener('click', () => {
-      reservationModal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    });
-    
-    // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
-      if (e.target === reservationModal) {
-        reservationModal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      }
-    });
-    
-    // Handle form submission
-    const reservationForm = document.getElementById('reservationForm');
-    
-    reservationForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      // Get form data
-      const formData = {
-        className: classNameInput.value,
-        fullName: document.getElementById('fullName').value,
-        phone: document.getElementById('phoneNumber').value,
-        email: document.getElementById('email').value,
-        message: document.getElementById('message').value
-      };
-      
-      // Save to localStorage
-      let reservations = JSON.parse(localStorage.getItem('reservations')) || [];
-      reservations.push({
-        ...formData,
-        date: new Date().toLocaleString('fa-IR')
-      });
-      localStorage.setItem('reservations', JSON.stringify(reservations));
-      
-      // Show success message
-      alert('درخواست رزرو شما با موفقیت ثبت شد! به زودی با شما تماس خواهیم گرفت.');
-      
-      // Reset form and close modal
-      reservationForm.reset();
-      reservationModal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    });
+  });
+
+  // پیام موفقیت
+  alert('درخواست رزرو شما با موفقیت ثبت شد! به زودی با شما تماس خواهیم گرفت.');
+
+  // ریست فرم و بستن مودال
+  reservationForm.reset();
+  reservationModal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+});
+
   </script>
 
 </body>
 
 </html>
+
 
